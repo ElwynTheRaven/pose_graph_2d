@@ -1,0 +1,6 @@
+cmake_minimum_required(VERSION 3.16)
+project(pose_graph_2d CXX)
+set(CMAKE_CXX_STANDARD 17)
+find_package(GTSAM REQUIRED)
+add_executable(pose_graph_2d src/main.cpp)
+target_link_libraries(pose_graph_2d gtsam)
