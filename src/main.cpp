@@ -54,9 +54,15 @@ int main()
 }
 */
 
-int main()
+int main( int argc, char** argv )
 {
-    auto [graph,initial] = gtsam::readG2o("data/intel_uniform.g2o");
+    string path = "data/intel_uniform.g2o";
+    if (argc >= 2)
+    {
+        path = argv[1];
+    }
+    
+    auto [graph,initial] = gtsam::readG2o(path);
     
     auto priorNoise = gtsam::noiseModel::Diagonal::Sigmas(gtsam::Vector3(0.1, 0.1, 0.05));
     graph->addPrior(0,initial->at <gtsam::Pose2>(0),priorNoise);
@@ -64,9 +70,9 @@ int main()
     gtsam::LevenbergMarquardtOptimizer optimizer(*graph, *initial);
     gtsam::Values result = optimizer.optimize();
 
-    std::cout << "迭代次数: " << optimizer.iterations() << std::endl;
-    std::cout << "优化前总误差: " << graph->error(*initial) << std::endl;
-    std::cout << "优化后总误差: " << graph->error(result) << std::endl;
+    cout << "迭代次数: " << optimizer.iterations() << std::endl;
+    cout << "优化前总误差: " << graph->error(*initial) << std::endl;
+    cout << "优化后总误差: " << graph->error(result) << std::endl;
 
     ofstream file_init("result_init.csv");
     file_init << "id,x,y,theta" << endl; 

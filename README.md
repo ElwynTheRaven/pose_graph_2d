@@ -44,7 +44,7 @@ awk '$1=="EDGE_SE2"{$7=100;$8=0;$9=0;$10=100;$11=0;$12=400} {print}' data/intel.
 ```bash
 cmake -S . -B build
 cmake --build build
-./build/pose_graph_2d
+./build/pose_graph_2d [g2o文件路径]
 python3 scripts/plot_traj.py
 ```
 
