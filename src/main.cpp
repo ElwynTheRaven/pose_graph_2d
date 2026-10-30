@@ -1,5 +1,7 @@
 #include <gtsam/geometry/Pose2.h>
 #include <gtsam/nonlinear/LevenbergMarquardtOptimizer.h>
+#include <gtsam/nonlinear/GaussNewtonOptimizer.h>
+#include <gtsam/nonlinear/DoglegOptimizer.h>
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 #include <gtsam/nonlinear/Values.h>
 #include <gtsam/slam/BetweenFactor.h>
@@ -67,19 +69,31 @@ int main( int argc, char** argv )
     auto priorNoise = gtsam::noiseModel::Diagonal::Sigmas(gtsam::Vector3(0.1, 0.1, 0.05));
     graph->addPrior(0,initial->at <gtsam::Pose2>(0),priorNoise);
 
-    gtsam::LevenbergMarquardtOptimizer optimizer(*graph, *initial);
-    gtsam::Values result = optimizer.optimize();
+    gtsam::LevenbergMarquardtOptimizer optimizer(*graph, *initial); //创建LM优化器，给它地形 *graph 和起点 *initial
+    gtsam::Values result = optimizer.optimize(); //开始优化，将结果存进 result
 
-    cout << "迭代次数: " << optimizer.iterations() << std::endl;
     cout << "优化前总误差: " << graph->error(*initial) << std::endl;
-    cout << "优化后总误差: " << graph->error(result) << std::endl;
+    cout << "迭代次数(LM): " << optimizer.iterations() << std::endl; //走了几步 iterations()
+    cout << "优化后总误差(LM): " << graph->error(result) << std::endl;
 
-    ofstream file_init("result_init.csv");
-    file_init << "id,x,y,theta" << endl; 
+    gtsam::GaussNewtonOptimizer optimizer_gn(*graph, *initial);
+    gtsam::Values result_gn = optimizer_gn.optimize();
+
+    cout << "迭代次数(GN): " << optimizer_gn.iterations() << std::endl;
+    cout << "优化后总误差(GN): " << graph->error(result_gn) << std::endl;
+
+    gtsam::DoglegOptimizer optimizer_dl(*graph, *initial);
+    gtsam::Values result_dl = optimizer_dl.optimize();
+
+    cout << "迭代次数(Dl): " << optimizer_dl.iterations() << std::endl;
+    cout << "优化后总误差(Dl): " << graph->error(result_dl) << std::endl;
+
+    ofstream file_init("result_init.csv"); //ofstream = output file stream（输出文件流），创建变量，括号里是文件名没有就新建（反之清空重写）
+    file_init << "id,x,y,theta" << endl; //表头
     ofstream file_opt("result_opt.csv");
     file_opt << "id,x,y,theta" << endl; 
 
-    for (gtsam::Key key : result.keys()) 
+    for (gtsam::Key key : result.keys()) //遍历位姿
     {
         gtsam::Pose2 p = result.at<gtsam::Pose2>(key);
         file_opt << key << "," << p.x() << "," << p.y() << "," << p.theta() << endl; 
@@ -90,7 +104,6 @@ int main( int argc, char** argv )
         gtsam::Pose2 p = initial->at<gtsam::Pose2>(key);
         file_init << key << "," << p.x() << "," << p.y() << "," << p.theta() << endl; 
     }
- 
  
     return 0;
 }
