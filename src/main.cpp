@@ -56,6 +56,18 @@ int main()
 }
 */
 
+void saveCsv(const std::string& filename, const gtsam::Values& values) //从右往左 values 是名字；gtsam::Values 是类型；& 表示不复印用原件；const 表示只看不改。
+{
+    ofstream file(filename); //ofstream = output file stream（输出文件流），创建变量，括号里是文件名没有就新建（反之清空重写）
+    file << "id,x,y,theta" << endl;
+
+    for (gtsam::Key key : values.keys()) //遍历位姿
+    {
+        gtsam::Pose2 p = values.at<gtsam::Pose2>(key);
+        file << key << "," << p.x() << "," << p.y() << "," << p.theta() << endl; 
+    }
+}
+
 int main( int argc, char** argv )
 {
     string path = "data/intel_uniform.g2o";
@@ -87,23 +99,9 @@ int main( int argc, char** argv )
 
     cout << "迭代次数(Dl): " << optimizer_dl.iterations() << std::endl;
     cout << "优化后总误差(Dl): " << graph->error(result_dl) << std::endl;
+    
+    saveCsv("result_init.csv", *initial);
+    saveCsv("result_opt.csv", result);
 
-    ofstream file_init("result_init.csv"); //ofstream = output file stream（输出文件流），创建变量，括号里是文件名没有就新建（反之清空重写）
-    file_init << "id,x,y,theta" << endl; //表头
-    ofstream file_opt("result_opt.csv");
-    file_opt << "id,x,y,theta" << endl; 
-
-    for (gtsam::Key key : result.keys()) //遍历位姿
-    {
-        gtsam::Pose2 p = result.at<gtsam::Pose2>(key);
-        file_opt << key << "," << p.x() << "," << p.y() << "," << p.theta() << endl; 
-    }
-
-    for (gtsam::Key key : initial->keys()) 
-    {
-        gtsam::Pose2 p = initial->at<gtsam::Pose2>(key);
-        file_init << key << "," << p.x() << "," << p.y() << "," << p.theta() << endl; 
-    }
- 
     return 0;
 }
